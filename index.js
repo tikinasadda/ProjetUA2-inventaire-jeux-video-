@@ -1,6 +1,9 @@
 
 import express from 'express';
+import { body, param } from 'express-validator';
 import connexion from './config/connexion.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 import Role from './models/Role.js';
 import Plateforme from './models/Plateforme.js';
@@ -50,7 +53,7 @@ Role.belongsToMany(Utilisateur, {
 console.log("Associations définies !");
 
 try {
-  await connexion.sync({ force: true });
+  await connexion.sync();
   console.log("Base de données synchronisée (tables créées) !");
 } catch (error) {
   console.error("Erreur lors de la synchronisation de la BDD:", error);

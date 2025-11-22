@@ -1,28 +1,38 @@
-// Dans controllers/plateformeController.js
-import Plateforme from '../models/Plateforme.js'; // On importe le modèle Plateforme
+import Plateforme from '../models/Plateforme.js';
+// 👈 NOUVEAU : Importez validationResult
+import { validationResult } from 'express-validator'; 
 
-// POST /api/plateformes - Créer une nouvelle plateforme
 export const addPlateforme = async (req, res) => {
-  try {
-    // req.body devrait contenir { "nom": "PC" } par exemple
-    const nouvellePlateforme = await Plateforme.create(req.body);
     
-    // On répond avec un statut 201 (Created)
-    res.status(201).json(nouvellePlateforme);
-  } catch (error) {
-    res.status(400).json({ message: "Erreur lors de la création de la plateforme", error: error.message });
-  }
+    // ----------------------------------------------------
+    // 👈 NOUVEAU BLOC DE VÉRIFICATION DE LA VALIDATION
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        // Si des erreurs sont détectées par les règles de la route, on arrête et renvoie 400.
+        return res.status(400).json({ 
+            message: "Erreur de validation. Veuillez vérifier les champs requis pour la plateforme.",
+            errors: errors.array() 
+        });
+    }
+    // ----------------------------------------------------
+    
+    try {
+        const nouvellePlateforme = await Plateforme.create(req.body);
+        
+        res.status(201).json(nouvellePlateforme);
+    } catch (error) {
+        // Pour une erreur interne du serveur ou de la base de données, 500 est souvent plus précis.
+        res.status(500).json({ message: "Erreur lors de la création de la plateforme", error: error.message });
+    }
 };
 
-// GET /api/plateformes - Obtenir toutes les plateformes
 export const getAllPlateformes = async (req, res) => {
-  try {
-    // On utilise la méthode findAll()
-    const plateformes = await Plateforme.findAll();
-    
-    // On répond avec un statut 200 (OK)
-    res.status(200).json(plateformes);
-  } catch (error) {
-    res.status(400).json({ message: "Erreur lors de la récupération des plateformes", error: error.message });
-  }
+    // Reste inchangé car c'est une route GET (lecture)
+    try {
+        const plateformes = await Plateforme.findAll();
+        
+        res.status(200).json(plateformes);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la récupération des plateformes", error: error.message });
+    }
 };

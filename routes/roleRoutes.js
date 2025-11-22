@@ -1,22 +1,69 @@
-// Dans routes/roleRoutes.js
 import express from 'express';
+// 👈 NOUVEAU : Importez body et param
+import { body, param } from 'express-validator'; 
 
-// 1. IMPORTER LES CONTRÔLEURS
-import { addRole, getAllRoles } from '../controllers/roleController.js';
+import { addRole, getAllRoles, updateRole, deleteRole } from '../controllers/roleController.js';
 
-// 2. IMPORTER LES MIDDLEWARES
-import { verifierToken, isAdmin } from '../middleware/authMiddleware.js';
+import { verifierToken } from '../middleware/authMiddleware.js'; 
+// Si vous avez un middleware d'autorisation (ex: isAdmin), importez-le ici.
+// import { isAdmin } from '../middleware/authMiddleware.js'; 
 
 const router = express.Router();
 
-// --- Routes Protégées (Admin seulement) ---
-// [CORRECTION] LA LIGNE POST ÉTAIT MANQUANTE.
-// On la remet ici SANS verifierToken et isAdmin, juste temporairement.
-router.post('/', addRole);
+// ------------------------------------
+// 1. Route POST (Création)
+// ------------------------------------
+router.post(
+  '/', 
+  verifierToken, // Assurez-vous d'être connecté
+  // isAdmin, // Optionnel: Assurez-vous d'avoir les droits admin
+  [
+    // Le titre du rôle est OBLIGATOIRE pour la création
+    body('titre')
+      .notEmpty().withMessage("Le titre du rôle est requis.")
+      .isString().withMessage("Le titre doit être une chaîne de caractères.")
+  ],
+  addRole
+);
 
+// ------------------------------------
+// 2. Route PUT (Mise à jour)
+// ------------------------------------
+router.put(
+  '/:id', 
+  verifierToken,
+  // isAdmin,
+  [
+    // L'ID du paramètre doit être un nombre entier valide
+    param('id')
+      .isInt({ min: 1 }).withMessage("L'ID du rôle doit être un nombre entier valide."),
+      
+    // Le titre du rôle est OBLIGATOIRE pour la mise à jour
+    body('titre')
+      .notEmpty().withMessage("Le nouveau titre du rôle est requis.")
+      .isString().withMessage("Le titre doit être une chaîne de caractères.")
+  ], 
+  updateRole
+);
 
-// --- Routes Protégées (Utilisateur connecté) ---
-// Pour VOIR les rôles, il faut juste être connecté
-router.get('/', verifierToken, getAllRoles);
+// ------------------------------------
+// 3. Route DELETE (Suppression)
+// ------------------------------------
+router.delete(
+  '/:id', 
+  verifierToken,
+  // isAdmin,
+  [
+    // L'ID du paramètre doit être un nombre entier valide
+    param('id')
+      .isInt({ min: 1 }).withMessage("L'ID du rôle à supprimer doit être un nombre entier valide.")
+  ],
+  deleteRole
+);
+
+// ------------------------------------
+// 4. Route GET (Lecture)
+// ------------------------------------
+router.get('/', getAllRoles);
 
 export default router;

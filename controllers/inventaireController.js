@@ -1,47 +1,60 @@
-// Dans controllers/inventaireController.js
 import Inventaire from '../models/Inventaire.js';
-// On importe aussi les modèles associés pour pouvoir les "joindre"
+
 import Utilisateur from '../models/Utilisateur.js';
 import Jeu from '../models/Jeu.js';
 import Plateforme from '../models/Plateforme.js';
 
-// POST /api/inventaire - Ajouter un jeu à l'inventaire d'un utilisateur
+// 👈 NOUVEAU : Importez validationResult
+import { validationResult } from 'express-validator'; 
+
 export const addInventaire = async (req, res) => {
-  try {
-    // Le body devra contenir :
-    // { "statut": "Possédé", "utilisateurId": 1, "jeuId": 1, "plateformeId": 1 }
-    const nouvelInventaire = await Inventaire.create(req.body);
     
-    res.status(201).json(nouvelInventaire);
-  } catch (error) {
-    res.status(400).json({ message: "Erreur lors de l'ajout à l'inventaire", error: error.message });
-  }
+    // ----------------------------------------------------
+    // 👈 NOUVEAU BLOC DE VÉRIFICATION DE LA VALIDATION
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        // Si des erreurs sont détectées par les règles de la route, on arrête et renvoie 400.
+        return res.status(400).json({ 
+            message: "Erreur de validation. Veuillez vérifier les champs requis.",
+            errors: errors.array() 
+        });
+    }
+    // ----------------------------------------------------
+    
+    try {
+        // Le corps de la requête contient directement les IDs (utilisateurId, jeuId, plateformeId)
+        // en plus de toute autre propriété de l'inventaire.
+        const nouvelInventaire = await Inventaire.create(req.body); 
+        
+        res.status(201).json(nouvelInventaire);
+    } catch (error) {
+        // Utiliser 500 pour les erreurs serveur/base de données.
+        res.status(500).json({ message: "Erreur lors de l'ajout à l'inventaire", error: error.message });
+    }
 };
 
-// GET /api/inventaire - Obtenir tout l'inventaire (de tous les utilisateurs)
 export const getAllInventaire = async (req, res) => {
-  try {
-    // C'est ici que la magie des relations opère !
-    // On utilise "include" pour joindre les tables associées.
-    const inventaire = await Inventaire.findAll({
-      include: [
-        { 
-          model: Utilisateur,
-          attributes: ['nom_utilisateur'] // On ne veut que le nom
-        },
-        { 
-          model: Jeu,
-          attributes: ['titre', 'genre'] // On veut le titre et le genre
-        },
-        { 
-          model: Plateforme,
-          attributes: ['nom'] // On veut le nom de la plateforme
-        }
-      ]
-    });
-    
-    res.status(200).json(inventaire);
-  } catch (error) {
-    res.status(400).json({ message: "Erreur lors de la récupération de l'inventaire", error: error.message });
-  }
+    // Cette fonction (GET) ne reçoit pas de corps à valider, elle reste inchangée.
+    try {
+        const inventaire = await Inventaire.findAll({
+            include: [
+                { 
+                    model: Utilisateur,
+                    attributes: ['nom_utilisateur']
+                },
+                { 
+                    model: Jeu,
+                    attributes: ['titre', 'genre']
+                },
+                { 
+                    model: Plateforme,
+                    attributes: ['nom']
+                }
+            ]
+        });
+        
+        res.status(200).json(inventaire);
+    } catch (error) {
+        res.status(500).json({ message: "Erreur lors de la récupération de l'inventaire", error: error.message });
+    }
 };
