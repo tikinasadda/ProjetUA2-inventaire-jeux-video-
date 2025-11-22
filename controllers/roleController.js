@@ -1,11 +1,8 @@
 import Role from '../models/Role.js';
-// 👈 NOUVEAU : Importez validationResult
 import { validationResult } from 'express-validator'; 
 
 export const addRole = async (req, res) => {
     
-    // ----------------------------------------------------
-    // 👈 NOUVEAU BLOC DE VÉRIFICATION
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ 
@@ -13,8 +10,6 @@ export const addRole = async (req, res) => {
             errors: errors.array() 
         });
     }
-    // ----------------------------------------------------
-    
     try {
         const nouveauRole = await Role.create(req.body);
         
@@ -25,7 +20,6 @@ export const addRole = async (req, res) => {
 };
 
 export const getAllRoles = async (req, res) => {
-    // Reste inchangé (GET)
     try {
         const roles = await Role.findAll();
         
@@ -34,24 +28,17 @@ export const getAllRoles = async (req, res) => {
         res.status(400).json({ message: "Erreur lors de la récupération des rôles", error: error.message });
     }
 };
-
-// PUT /api/roles/:id - Mettre à jour un rôle
 export const updateRole = async (req, res) => {
     
-    // ----------------------------------------------------
-    // 👈 NOUVEAU BLOC DE VÉRIFICATION
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Cela interceptera les erreurs de l'ID (param) et du corps (body)
         return res.status(400).json({ 
             message: "Erreur de validation. L'ID ou le titre du rôle est invalide.",
             errors: errors.array() 
         });
     }
-    // ----------------------------------------------------
-
     try {
-        const { id } = req.params; // Récupère l'ID depuis l'URL
+        const { id } = req.params; 
         const [result] = await Role.update(req.body, { 
             where: { id: id }
         });
@@ -66,23 +53,17 @@ export const updateRole = async (req, res) => {
     }
 };
 
-// DELETE /api/roles/:id - Supprimer un rôle
 export const deleteRole = async (req, res) => {
     
-    // ----------------------------------------------------
-    // 👈 NOUVEAU BLOC DE VÉRIFICATION
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        // Cela interceptera les erreurs de l'ID (param)
         return res.status(400).json({ 
             message: "Erreur de validation. L'ID du rôle est invalide.",
             errors: errors.array() 
         });
     }
-    // ----------------------------------------------------
-    
     try {
-        const { id } = req.params; // Récupère l'ID depuis l'URL
+        const { id } = req.params;
         const result = await Role.destroy({ 
             where: { id: id }
         });
